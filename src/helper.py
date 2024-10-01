@@ -24,3 +24,19 @@ def preprocess_content(content):
 
     return processed_content
 
+
+
+
+def clean_string(input_string):
+    """
+    去除字符串中的空格和引號。
+    
+    參數:
+    input_string (str): 要處理的字符串。
+    
+    返回:
+    str: 處理後的字符串。
+    """
+    # 去除空格和引號
+    cleaned_string = input_string.replace('"', '').replace(' ', '')
+    return cleaned_string

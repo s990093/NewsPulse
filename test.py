@@ -1,78 +1,66 @@
+import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.cluster import MiniBatchKMeans
+import torch
+from transformers import BertTokenizer, BertModel
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# 读取 CSV 文件
-file_path = 'data/analysis_report.csv'  # 替换为你的 CSV 文件路径
-df = pd.read_csv(file_path)
+# 1. 加载 CSV 文件
+df = pd.read_csv('data/analysis_report.csv')
 
-# 简化分词函数，直接根据 "/" 进行分割
-def preprocess_text(text):
-    words = text.split('/')
-    return ' '.join(words)
+# 2. 初始化 BERT tokenizer 和 model
+tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+model = BertModel.from_pretrained('bert-base-chinese')
+source = "extracted_news_info"
 
-# 应用文本预处理
-df['cleaned_summary'] = df['extracted_news_info'].apply(preprocess_text)
+# 3. 定义获取 BERT 嵌入向量的函数
+def get_embedding(text):
+    inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :].squeeze().numpy()
 
-# 初始化 TF-IDF 向量化器，限制特征数量并过滤词汇
-vectorizer = TfidfVectorizer(max_features=5000, min_df=2, max_df=0.8)
+# 4. 获取有效文本并提取嵌入向量
+valid_texts = df[source].dropna().astype(str).tolist()
+embeddings = np.array([get_embedding(text) for text in valid_texts])
 
-# 将清理后的文本转换为 TF-IDF 向量
-tfidf_matrix = vectorizer.fit_transform(df['cleaned_summary'])
+# 5. 聚类嵌入向量
+num_clusters = 6
+kmeans = KMeans(n_clusters=num_clusters)
+df['cluster'] = kmeans.fit_predict(embeddings)
 
-# 聚类 - 使用 MiniBatchKMeans 将数据分为 5 个簇
-num_clusters = 5
-kmeans = MiniBatchKMeans(n_clusters=num_clusters, random_state=42, batch_size=100)
-df['cluster'] = kmeans.fit_predict(tfidf_matrix)
+# 6. PCA 降维至二维
+pca = PCA(n_components=2)
+reduced_embeddings = pca.fit_transform(embeddings)
 
-print("每篇文章所属的簇：")
-print(df[['ID', 'cluster']].head())
-
-# 使用 PCA 降维到 2 维
-pca = PCA(n_components=2, random_state=42)
-principal_components = pca.fit_transform(tfidf_matrix.toarray())
-df['PC1'] = principal_components[:, 0]
-df['PC2'] = principal_components[:, 1]
-
-# 绘制 PCA 散点图
+# 7. 可视化聚类结果
 plt.figure(figsize=(12, 8))
-sns.scatterplot(
-    x='PC1', y='PC2',
-    hue='cluster',
-    palette='viridis',
-    data=df,
-    legend='full',
-    alpha=0.7
-)
-plt.title('PCA of TF-IDF Vectors')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
+sns.scatterplot(x=reduced_embeddings[:, 0], y=reduced_embeddings[:, 1], hue=df['cluster'], palette='Set1', s=100)
+
+for i, _ in enumerate(valid_texts):
+    plt.annotate(i + 1, (reduced_embeddings[i, 0], reduced_embeddings[i, 1]), fontsize=9, alpha=0.7)
+
+plt.title('BERT Embeddings Clustering Visualization')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
 plt.legend(title='Cluster')
+plt.grid(True)
 plt.show()
 
-# 使用 t-SNE 降维到 2 维
-tsne = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=300)
-tsne_results = tsne.fit_transform(tfidf_matrix.toarray())
-df['TSNE1'] = tsne_results[:, 0]
-df['TSNE2'] = tsne_results[:, 1]
 
-# 绘制 t-SNE 散点图
-plt.figure(figsize=(12, 8))
-sns.scatterplot(
-    x='TSNE1', y='TSNE2',
-    hue='cluster',
-    palette='viridis',
-    data=df,
-    legend='full',
-    alpha=0.7
-)
-plt.title('t-SNE of TF-IDF Vectors')
-plt.xlabel('TSNE Component 1')
-plt.ylabel('TSNE Component 2')
-plt.legend(title='Cluster')
-plt.show()
+# from sklearn.metrics import silhouette_score
+
+# best_k = 0
+# best_score = -1
+# for k in range(2, 11):
+#     kmeans = KMeans(n_clusters=k)
+#     labels = kmeans.fit_predict(embeddings)
+#     score = silhouette_score(embeddings, labels)
+#     print(f'k={k}, Silhouette Score={score}')
+#     if score > best_score:
+#         best_k = k
+#         best_score = score
+
+# print(f'最佳聚类数: {best_k}，对应的轮廓系数: {best_score}')

@@ -8,7 +8,7 @@ console = Console()
 if __name__ == "__main__":
     json_file_path = 'data/news.json'
     news_data = load_news(json_file_path)
-
+       
     with Progress() as progress:
         task = progress.add_task("[cyan]Analyzing news...", total=len(news_data))
 

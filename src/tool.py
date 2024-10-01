@@ -3,6 +3,7 @@ import re
 import spacy
 import jieba
 import logging
+import csv
 
 jieba.setLogLevel(logging.WARNING)
 
@@ -73,13 +74,13 @@ def extract_economic_entities(text):
 
 
 
-import csv
 
 def sanitize_input(value):
     """清理輸入的字符串，去除不必要的換行符號和空格。"""
-    return str(value).replace('\n', ' ').replace('\r', ' ').strip()
+    return  str(value).replace('\n', ' ').replace('\r', ' ').strip()
+    
 
-def export_to_csv(id, sentiment_result, sentiment_ratio, trend_result, extracted_news_info, summary_report, compression_ratio, filename='data/analysis_report.csv'):
+def export_to_csv(id, title, sentiment_result, sentiment_ratio, trend_result, extracted_news_info, summary_report, compression_ratio, country, filename='data/analysis_report.csv'):
     """
     將分析結果匯出到 CSV 檔案。
     
@@ -102,18 +103,24 @@ def export_to_csv(id, sentiment_result, sentiment_ratio, trend_result, extracted
         # 如果是新檔案，寫入標題行
         if file.tell() == 0:  # 檔案是空的，寫入標題行
             writer.writerow(['ID', 
+                             'title',
                              'extracted_news_info',
                              'summary_report',
                              'sentiment_result',
                              'trend_result',
                              'sentiment_ratio',
-                             'compression_ratio'])
+                             'compression_ratio',
+                             'country'])
         
         # 寫入分析結果
         writer.writerow([id,
+                         title,
                          extracted_news_info,
                          summary_report,
                          sentiment_result,
                          trend_result, 
                          sentiment_ratio,
-                         compression_ratio])
+                         compression_ratio,
+                         country])
+        
+        

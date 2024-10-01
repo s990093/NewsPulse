@@ -5,10 +5,10 @@ from typing import Dict, Any
 class NewsArticle:
     def __init__(self, data: Dict[str, Any]):
         self.id = data['id']
-        self.type = data['type']
-        self.source = data['source']
-        self.title = data['title']
-        self.date = data['date']
+        # self.type = data['type']
+        # self.source = data['source']
+        # self.title = data['title']
+        # self.date = data['date']
         # self.preprocessed_news = data['preprocessed_news']
 
     def get_content(self) -> str:
