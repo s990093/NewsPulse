@@ -18,7 +18,7 @@ def preprocess_text(text):
 
 # 對 'extracted_news_info' 列進行中文分詞
 
-source = "extracted_news_info"
+source = "summary_report"
 df['extracted_news_info'] = df[source].apply(preprocess_text)
 
 # 2. 載入 BERT 模型和 tokenizer
@@ -69,16 +69,14 @@ ids = df['ID'].values
 # 設定相似度閾值
 
 # 繪製相似度熱圖
-binary_similarity_matrix = np.where(similarity_matrix >= 0.8, 0.7, 0)
-
+# binary_similarity_matrix = np.where(similarity_matrix >= 1, 0.7, 0)
 plt.figure(figsize=(10, 8))
 # 使用 seaborn 的 heatmap 繪製
-sns.heatmap(binary_similarity_matrix, 
+sns.heatmap(similarity_matrix, 
             annot=False,        # 不顯示數值
             cmap="coolwarm",   # 顏色映射
             xticklabels=ids,   # x 軸標籤
             yticklabels=ids,   # y 軸標籤
-            mask=(similarity_matrix < threshold),  # 隱藏低於閾值的值
             cbar_kws={'label': '相似度'})  # 顯示顏色條的標籤
 
 plt.title(source)

@@ -6,13 +6,15 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # 1. 加载 CSV 文件
 df = pd.read_csv('data/analysis_report.csv')
 
 # 2. 初始化 BERT tokenizer 和 model
-tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-model = BertModel.from_pretrained('bert-base-chinese')
+tokenizer = AutoTokenizer.from_pretrained("hw2942/bert-base-chinese-finetuning-financial-news-sentiment-v2")
+model = AutoModelForSequenceClassification.from_pretrained("hw2942/bert-base-chinese-finetuning-financial-news-sentiment-v2")
+
 source = "extracted_news_info"
 
 # 3. 定义获取 BERT 嵌入向量的函数
@@ -27,7 +29,7 @@ valid_texts = df[source].dropna().astype(str).tolist()
 embeddings = np.array([get_embedding(text) for text in valid_texts])
 
 # 5. 聚类嵌入向量
-num_clusters = 6
+num_clusters = 5
 kmeans = KMeans(n_clusters=num_clusters)
 df['cluster'] = kmeans.fit_predict(embeddings)
 
