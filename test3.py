@@ -42,28 +42,31 @@ num_clusters = 5
 kmeans = KMeans(n_clusters=num_clusters, random_state=42)
 df['cluster'] = kmeans.fit_predict(embeddings)
 
-# 8. 输出聚类结果
-for index, row in df.iterrows():
-    print(f"News: {df['ID'][index]}, Cluster: {row['cluster']}")
+# output_data = []
 
+# for index, row in df.iterrows():
+#     output_data.append({"ID": df["ID"][index], "Cluster": int(row['cluster'])})
 
+# # 保存为JSON文件
+# output_df = pd.DataFrame(output_data)
+# output_df.to_json("clustering_results.json", orient='records', force_ascii=False, indent=4)
 
 # 8. 降维到二维进行可视化
-# pca = PCA(n_components=2)
-# reduced_embeddings = pca.fit_transform(embeddings)
+pca = PCA(n_components=2)
+reduced_embeddings = pca.fit_transform(embeddings)
 
-# # 9. 可视化聚类结果
-# plt.figure(figsize=(12, 8))
-# sns.scatterplot(x=reduced_embeddings[:, 0], y=reduced_embeddings[:, 1], hue=df['cluster'], palette='Set1', s=100)
+# 9. 可视化聚类结果
+plt.figure(figsize=(12, 8))
+sns.scatterplot(x=reduced_embeddings[:, 0], y=reduced_embeddings[:, 1], hue=df['cluster'], palette='Set1', s=100)
 
-# # 添加每个点的文本标签
-# for i, txt in enumerate(valid_texts):
-#     plt.annotate(i + 1, (reduced_embeddings[i, 0], reduced_embeddings[i, 1]), fontsize=9, alpha=0.7)
+# 添加每个点的文本标签
+for i, txt in enumerate(valid_texts):
+    plt.annotate(i + 1, (reduced_embeddings[i, 0], reduced_embeddings[i, 1]), fontsize=9, alpha=0.7)
 
-# plt.title('KMeans Clustering of News Articles')
-# plt.xlabel('PCA Component 1')
-# plt.ylabel('PCA Component 2')
-# plt.legend(title='Cluster')
-# plt.grid(True)
-# plt.show()
+plt.title('KMeans Clustering of News Articles')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.legend(title='Cluster')
+plt.grid(True)
+plt.show()
 
