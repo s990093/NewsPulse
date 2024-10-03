@@ -19,7 +19,7 @@ if __name__ == "__main__":
         existing_ids = set()  # If the file does not exist, process all IDs
 
     # Read new news data
-    df = pd.read_csv('data/data.csv')
+    df = pd.read_csv('data/news_data.csv')
 
     # Remove duplicates and keep the first occurrence
     df = df.drop_duplicates(subset='id', keep='first')
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     total_news = len(new_news_df)
     success_count = 0
     failure_count = 0
-    max_workers = 1
+    max_workers = 10
 
     # Set up ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=max_workers) as executor:

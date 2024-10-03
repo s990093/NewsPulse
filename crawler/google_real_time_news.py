@@ -17,6 +17,7 @@ Google新聞即時爬蟲
 
 # 載入套件
 import json
+import random
 import requests
 import pandas as pd
 import time
@@ -28,9 +29,10 @@ from urllib.parse import quote, urlparse
 
 # 參數設定
 # 欲下載新聞的股票關鍵字清單
-searchList = ['經濟',]
+searchList = ['降息',]
 # 新聞下載起始日
-nearStartDate = (datetime.date.today() + datetime.timedelta(days=-10)).strftime('%Y-%m-%d')
+nearStartDate = (datetime.date.today() + datetime.timedelta(days=-20)).strftime('%Y-%m-%d')
+
 
 
 # google-news-url-decoder
@@ -51,7 +53,8 @@ def fetch_decoded_batch_execute(id):
     response = requests.post(
         "https://news.google.com/_/DotsSplashUi/data/batchexecute?rpcids=Fbv4je",
         headers=headers,
-        data={"f.req": s}
+        data={"f.req": s},
+        proxies={"http": "http://{}".format(get_proxy)}
     )
 
     if response.status_code != 200:
@@ -319,7 +322,7 @@ if __name__ == '__main__':
                     newsUrl, content = beautifulSoupNews(url=df['link'][iLink])
                     newsUrls.append(newsUrl)
                     contents.append(content)
-                    time.sleep(1)
+                    time.sleep(4)
 
                 except Exception as e:
                     print(f"新聞下載錯誤 (股票: {searchList[iSearch]}, 連結: {df['link'][iLink]}): {e}")

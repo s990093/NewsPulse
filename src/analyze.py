@@ -6,8 +6,8 @@ df = pd.read_json("data/clustering_results.json")
 cluster_0_data = df[df['Cluster'] == 0]
 
 # 读取 CSV 文件
-file_path = 'data/analysis_report.csv'
-analysis_df = pd.read_csv(file_path)
+# file_path = 'data/analysis_report.csv'
+# analysis_df = pd.read_csv(file_path)
 
 def recursive_summarization(highlights, threshold=3):
     # 如果 highlights 的長度小於 threshold，則返回它們的摘要

@@ -8,7 +8,7 @@ import seaborn as sns
 import pickle
 
 # 1. 加載 CSV 文件
-file_path = 'data/analysis_report.csv'  
+file_path = 'data/report.csv'  
 df = pd.read_csv(file_path)
 
 # 中文分词函数
@@ -18,7 +18,7 @@ def preprocess_text(text):
 
 # 對 'extracted_news_info' 列進行中文分詞
 
-source = "summary_report"
+source = "extracted_news_info"
 df['extracted_news_info'] = df[source].apply(preprocess_text)
 
 # 2. 載入 BERT 模型和 tokenizer

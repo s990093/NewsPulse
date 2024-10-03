@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, AutoModel
 
 
 
-file_path = 'data/analysis_report.csv'  
+file_path = 'data/csv/report.csv'  
 df = pd.read_csv(file_path)
 
 source = "extracted_news_info"
@@ -37,25 +37,44 @@ def get_embedding(text):
 valid_texts = df[source].tolist()  # 使用原始文本
 embeddings = np.array([get_embedding(text) for text in valid_texts])
 
+
+print("get embeddings")
+
 # 7. KMeans 聚类
-num_clusters = 5  
+num_clusters = 6
 kmeans = KMeans(n_clusters=num_clusters, random_state=42)
 df['cluster'] = kmeans.fit_predict(embeddings)
 
-# output_data = []
+output_data = []
 
-# for index, row in df.iterrows():
-#     output_data.append({"ID": df["ID"][index], "Cluster": int(row['cluster'])})
+for index, row in df.iterrows():
+    output_data.append({"ID": df["ID"][index], "Cluster": int(row['cluster'])})
 
-# # 保存为JSON文件
-# output_df = pd.DataFrame(output_data)
-# output_df.to_json("clustering_results.json", orient='records', force_ascii=False, indent=4)
+# 保存为JSON文件
+output_df = pd.DataFrame(output_data)
+output_df.to_json("clustering_results.json", orient='records', force_ascii=False, indent=4)
 
 # 8. 降维到二维进行可视化
 pca = PCA(n_components=2)
 reduced_embeddings = pca.fit_transform(embeddings)
 
 # 9. 可视化聚类结果
+import tkinter as tk
+from tkinter import messagebox
+
+def query_cluster_by_id(article_id, df):
+    """
+    根據文章的 ID 查詢該文章所屬的 cluster 類別
+    :param article_id: 文章的 ID
+    :param df: 包含 cluster 結果的數據框
+    :return: 該文章所屬的 cluster 類別
+    """
+    if article_id in df['ID'].values:
+        cluster = df.loc[df['ID'] == article_id, 'cluster'].values[0]
+        return cluster
+    else:
+        return "未找到該 ID 的文章"
+    
 plt.figure(figsize=(12, 8))
 sns.scatterplot(x=reduced_embeddings[:, 0], y=reduced_embeddings[:, 1], hue=df['cluster'], palette='Set1', s=100)
 

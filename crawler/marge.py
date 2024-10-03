@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
 # 讀取合併後的 CSV 檔案
-merged_data = pd.read_csv('news_data.csv')
+merged_data = pd.read_csv('data.csv')
 
 # 為每篇文章生成唯一的 id，從 1 開始
 merged_data['id'] = merged_data.index + 1

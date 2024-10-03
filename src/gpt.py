@@ -53,7 +53,7 @@ def extract_country_code(news_id, summary_report, news_content, max_retries=4):
             print(f"嘗試第 {attempt + 1} 次提取國家代碼: {country}")
             
             # 檢查是否成功提取國家代碼，並且符合兩位字母的格式
-            if country and len(country) == 2 and country.isalpha():
+            if country and len(country) <= 4 and country.isalpha():
                 country = country.upper()
                 return country  # Successfully extracted a country code, return result
             
@@ -66,7 +66,7 @@ def extract_country_code(news_id, summary_report, news_content, max_retries=4):
             
             if detected_language == "en":
                 # If detected language is English, and country code is two letters, return it
-                if country and len(country) == 2 and country.isalpha():
+                if country and len(country) <= 4 and country.isalpha():
                     return country.upper()  # Return uppercase country code
 
         
@@ -131,18 +131,16 @@ def analyze_news(news_id, news_content, news_title):
     """
     
     start_time = time.time()
-
     
     news_content = preprocess_content(news_content)
-
     
     # 確認內容長度
-    if len(news_content) <= 40:
+    if len(news_content) <= 20:
         print(f'新聞ID: {news_id} - 此新聞內容過短。')
         return None
 
     # 經濟相關性分析
-    relation_prompt = "這篇新聞是否與經濟或股票有關？請回答用情緒回答我要計算。"
+    relation_prompt = "這篇新聞是否與經濟或股票有關？請回答用情緒回答我要計算。 繁體字"
     is_relation = clean_string(analyze_with_gpt(news_title, relation_prompt))
     relation_ratio = analyze_sentiment_ratio(is_relation)
 
@@ -152,11 +150,11 @@ def analyze_news(news_id, news_content, news_title):
         return None
 
     # 總結新聞內容
-    summary_prompt = "提取新聞中的重要資訊，移除無關內容，簡短且直接，100字以內。"
+    summary_prompt = "提取新聞中的重要資訊，移除無關內容，簡短且直接，100字以內。繁體字"
     summary_report = clean_string(analyze_with_gpt(news_content, summary_prompt))
 
     # 提取標題
-    title_prompt = "根據內容提取簡短且直接的標題，移除無關內容。"
+    title_prompt = "根據內容提取簡短且直接的標題，移除無關內容。繁體字"
     title = clean_string(analyze_with_gpt(summary_report, title_prompt))
 
     # 提取關鍵字
@@ -166,7 +164,7 @@ def analyze_news(news_id, news_content, news_title):
     
     extracted_news_info = ""
     for attempt in range(3):  # 限制最多重試3次
-        extracted_news_info = analyze_with_gpt(summary_report, news_extraction_prompt)
+        extracted_news_info = clean_string(analyze_with_gpt(summary_report, news_extraction_prompt))
         if extracted_news_info and "/" in extracted_news_info and "\n" not in extracted_news_info:
             break
         else:
@@ -182,12 +180,12 @@ def analyze_news(news_id, news_content, news_title):
     compression_ratio = (original_word_count / summary_word_count) if summary_word_count > 0 else float('inf')
 
     # 情感分析
-    sentiment_prompt = "針對以下新聞內容進行情感分析，簡短直接，移除多餘內容。"
+    sentiment_prompt = "針對以下新聞內容進行情感分析，簡短直接，移除多餘內容。繁體字"
     sentiment_result = clean_string(analyze_with_gpt(summary_report, sentiment_prompt))
     sentiment_ratio = analyze_sentiment_ratio(sentiment_result)
 
     # 趨勢分析
-    trend_analysis_prompt = "提供簡短的趨勢分析，重點簡述趨勢。"
+    trend_analysis_prompt = "提供簡短的趨勢分析，重點簡述趨勢。繁體字"
     trend_result = clean_string(analyze_with_gpt(sentiment_result, trend_analysis_prompt))
 
     # 國家代碼提取，最多重試 country_max_retries 次
