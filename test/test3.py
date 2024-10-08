@@ -55,7 +55,7 @@ output_df = pd.DataFrame(output_data)
 output_df.to_json("clustering_results.json", orient='records', force_ascii=False, indent=4)
 
 # 8. 降维到二维进行可视化
-pca = PCA(n_components=2)
+pca = PCA(n_components=5)
 reduced_embeddings = pca.fit_transform(embeddings)
 
 # 9. 可视化聚类结果

@@ -99,6 +99,7 @@ def main():
     file_path = 'report.csv'
     df = load_data(file_path)
     news_data = df['FinNA'].tolist()
+    news_id = df['news_id'].tolist() 
     
     # Tokenization and corpus creation
     tokenized_news = tokenize(news_data)
@@ -134,9 +135,13 @@ def main():
     optimal_clusters = perform_clustering(reduced_matrix, num_topics)
     print(f"Optimal Cluster Count: {optimal_clusters}")
     
-    # Create results DataFrame
-    results_df = pd.DataFrame({'新聞': news_data, '類別': labels})
-    results_df.to_csv("test.csv", index=False)
+    results_df = pd.DataFrame({
+        'ID': news_id,
+        '新聞': news_data,
+        '類別': labels
+    })
+    
+    results_df.to_csv("classify_news.csv", index=False)
 
     show_ids = [407, 383, 392, 384]
     plot_results(reduced_matrix, labels, df, show_ids)

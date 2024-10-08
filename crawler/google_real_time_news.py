@@ -16,6 +16,7 @@ Google新聞即時爬蟲
 """
 
 # 載入套件
+import traceback
 import json
 import random
 import requests
@@ -26,12 +27,21 @@ from bs4 import BeautifulSoup
 import datetime
 import base64
 from urllib.parse import quote, urlparse
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 # 參數設定
 # 欲下載新聞的股票關鍵字清單
-searchList = ['降息',]
+searchList = ['經濟',]
 # 新聞下載起始日
-nearStartDate = (datetime.date.today() + datetime.timedelta(days=-20)).strftime('%Y-%m-%d')
+nearStartDate = (datetime.date.today() + datetime.timedelta(days=-30)).strftime('%Y-%m-%d')
+
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # 無頭模式
+chrome_options.add_argument("--disable-gpu")  # 如果你使用的是 Windows 系統
+
+
+driver = webdriver.Chrome(options=chrome_options)
 
 
 
@@ -53,9 +63,7 @@ def fetch_decoded_batch_execute(id):
     response = requests.post(
         "https://news.google.com/_/DotsSplashUi/data/batchexecute?rpcids=Fbv4je",
         headers=headers,
-        data={"f.req": s},
-        proxies={"http": "http://{}".format(get_proxy)}
-    )
+        data={"f.req": s})
 
     if response.status_code != 200:
         print(response.status_code)
@@ -74,6 +82,22 @@ def fetch_decoded_batch_execute(id):
 
 
 def decode_urls(articles):
+    # driver.get("about:blank")
+    
+    # # 讀取外部 JavaScript 檔案
+    # with open('post_request.js', 'r') as file:
+    #     js_code = file.read()
+        
+    # response_data = driver.execute_script(f"{js_code} return sendPostRequest(arguments[0]);",articles )
+    
+    # # 打印結果
+    # if response_data:
+    #     print("POST 請求結果：", response_data)
+    # else:
+    #     print("請求失敗或無結果")
+
+
+    
     articles_reqs = [
         [
             "Fbv4je",
@@ -88,12 +112,18 @@ def decode_urls(articles):
         headers=headers,
         data=payload,
     )
+
+                
     response.raise_for_status()
+    
+
+    
     return [json.loads(res[2])[1] for res in json.loads(response.text.split("\n\n")[1])[:-2]]
 
 
 def get_decoding_params(gn_art_id):
     response = requests.get(f"https://news.google.com/articles/{gn_art_id}")
+    
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "lxml")
     div = soup.select_one("c-wiz > div")
@@ -107,7 +137,6 @@ def get_decoding_params(gn_art_id):
 # google-news-url-decoder
 def decode_google_news_url(source_url):
     url = requests.utils.urlparse(source_url)
-    
     
     
     path = url.path.split("/")
@@ -326,7 +355,8 @@ if __name__ == '__main__':
 
                 except Exception as e:
                     print(f"新聞下載錯誤 (股票: {searchList[iSearch]}, 連結: {df['link'][iLink]}): {e}")
-                    newsUrls.append(None)  # 如果失敗，加入None以保持資料一致性
+                    traceback.print_exc()
+                    newsUrls.append(None)  
                     contents.append(None)
 
             # 新增新聞連結與內容欄位
@@ -338,6 +368,8 @@ if __name__ == '__main__':
 
         except Exception as e:
             print(f"搜尋股票錯誤 (股票: {searchList[iSearch]}): {e}")
+            traceback.print_exc()
+
 
     # 輸出結果檢查
     try:
