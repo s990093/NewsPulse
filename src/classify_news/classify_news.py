@@ -119,6 +119,8 @@ def main():
     combined_weights = combine_weights(tfidf_df, dfidfo_series)
     
     # Get embeddings
+    
+    # 改用 summary statistics
     word2vec_vectors = get_Word2Vec_embedding(tokenized_news)
     bert_vectors = get_bert_embedding(tokenized_news)
     fasttext_vectors = get_fasttext_embedding(tokenized_news)

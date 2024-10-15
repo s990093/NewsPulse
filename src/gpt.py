@@ -14,6 +14,7 @@ from rich.console import Console
 import torch
 from transformers import BertTokenizer, BertForSequenceClassification, pipeline
 from transformers import AutoModelForSequenceClassification,AutoTokenizer,pipeline
+import traceback
 
 
 model = AutoModelForSequenceClassification.from_pretrained('uer/roberta-base-finetuned-chinanews-chinese')
@@ -126,8 +127,12 @@ def analyze_with_gpt(content, task_prompt, model="gpt-3.5-turbo-0125", temperatu
             ]
         )
         return completion.choices[0].message.content
-    except openai.error.OpenAIError as e:
+    except Exception as e:
         print(f"OpenAI API error: {e}")
+        # print("Traceback:")
+        # traceback.print_exc()  # 打印錯誤堆棧
+        # print( {"role": "system", "content": task_prompt},
+        #         {"role": "user", "content": content})
         return "Error in generating response"
 
 def analyze_news(news_id, news_content, news_title, export = True, filename = "report.csv"):

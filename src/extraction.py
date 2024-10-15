@@ -5,6 +5,9 @@ import threading
 from rich.progress import Progress
 from rich.console import Console
 import concurrent.futures
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 
 console = Console()
@@ -32,41 +35,122 @@ def get_summary_report(file_path, filtered_df):
     return merged_df
 
 
-def process_batch(batch, task_prompt, max_tokens=3000):
+
+def split_and_summarize(text, task_prompt, max_tokens):
+    """
+    對超過最大 token 限制的文本進行拆分並總結
+    :param text: 要處理的文本
+    :param task_prompt: 用於指導總結的提示字串
+    :param max_tokens: GPT 回應的最大 token 數
+    :return: 最終摘要
+    """
+    
+    # 將 task_prompt 更新以引導總結
+    task_prompt += f"幫我獲取關鍵內容，{task_prompt}"
+    sub_summaries = []
+    sentences = re.split(r'(?<=[.!?]) +', text)  # 根據句子結尾符號分割
+
+    current_chunk = ""
+    futures = []
+
+    # 使用 ThreadPoolExecutor 來處理分析
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) <= max_tokens // 2:
+                current_chunk += sentence + " "
+            else:
+                future = executor.submit(analyze_with_gpt, current_chunk.strip(), task_prompt, max_tokens=1500)
+                futures.append(future)
+                current_chunk = sentence + " "  # 開始新的 chunk
+
+        # 處理最後一個 chunk
+        if current_chunk:
+            future = executor.submit(analyze_with_gpt, current_chunk.strip(), task_prompt, max_tokens=1500)
+            futures.append(future)
+
+        for future in as_completed(futures):
+            summary = future.result()
+            sub_summaries.append(summary)
+
+    # 確保最終摘要不超過 max_tokens
+    final_summary = " ".join(sub_summaries)
+    
+    # 如果摘要超過 max_tokens，則遞規總結
+    while len(final_summary.split()) > max_tokens:
+        final_summary = split_and_summarize(final_summary, task_prompt, max_tokens)
+        
+    # last summary and final summary < max_tokens
+    final_summary = analyze_with_gpt(final_summary, task_prompt, max_tokens=2000, temperature=0.2)
+
+
+    return final_summary
+
+def process_batch(batch, task_prompt, max_tokens=1500, max_workers=20, *args, **kwargs):
     """
     將一個批次的新聞列表進行處理並合成成一篇摘要文章
     :param batch: 新聞列表 (新聞文本的列表)
     :param task_prompt: 用於指導總結的提示字串
     :param max_tokens: GPT 回應的最大 token 數
+    :param max_workers: 最大同時執行的線程數
     :return: 該批次的合成文章
     """
+    
+    
     # 將該批次的新聞轉換成一個長文本
     batch_text = " ".join(batch)
     
     # 如果文本的 token 超過限制，就分段處理
     if len(batch_text) > max_tokens:
+        task_prompt += f"目前內文太長幫我使用最短內容，{task_prompt}"
+
         sub_summaries = []
-        # 分割文本以符合 token 限制（這裡假設每段長度為 max_tokens 的一半）
-        split_size = max_tokens // 2
-        for i in range(0, len(batch_text), split_size):
-            sub_text = batch_text[i:i + split_size]
-            summary = analyze_with_gpt(sub_text, task_prompt, max_tokens=300)
-            sub_summaries.append(summary)
         
-        # 將所有子總結合併，並再次進行最終總結
+        # 使用正則表達式查找完整的句子
+        sentences = re.split(r'(?<=[.!?]) +', batch_text)  # 根據句子結尾符號分割
+        
+        current_chunk = ""
+        futures = []  # 存儲 futures
+
+        # 使用 ThreadPoolExecutor 並設置最大線程數
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for sentence in sentences:
+                if len(current_chunk) + len(sentence) <= max_tokens // 2:
+                    current_chunk += sentence + " "
+                else:
+                    # 提交當前的 chunk 處理
+                    future = executor.submit(analyze_with_gpt, current_chunk.strip(), task_prompt, max_tokens=2000, temperature=0.2)
+                    futures.append(future)
+                    current_chunk = sentence + " "  # 開始新的 chunk
+            
+            # 處理最後一個 chunk
+            if current_chunk:
+                future = executor.submit(analyze_with_gpt, current_chunk.strip(), task_prompt, max_tokens=2000, temperature=0.2)
+                futures.append(future)
+
+            # 收集所有的摘要
+            for future in as_completed(futures):
+                summary = future.result()
+                sub_summaries.append(summary)
+
         combined_summary = " ".join(sub_summaries)
-        final_summary = analyze_with_gpt(combined_summary, task_prompt, max_tokens=1400)
+        
+        
+        if len(combined_summary) > max_tokens:
+            final_summary =  split_and_summarize(combined_summary, task_prompt, 1000)
+            # print(final_summary)
+        else:
+            final_summary = analyze_with_gpt(combined_summary, task_prompt, max_tokens=2000, temperature=0.2)
     else:
         # 如果文本長度在限制內，直接總結
-        final_summary = analyze_with_gpt(batch_text, task_prompt, max_tokens=1000)
-
+        final_summary = analyze_with_gpt(batch_text, task_prompt, max_tokens=2000, temperature=0.2)
+        
+        
+        
     return final_summary
 
 
 
-
-def _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt, batch_size=5, pool_size=3):
-    
+def _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt, batch_size=5, pool_size=3, *args, **kwargs):
     # Step 1: Initial summaries (assuming they are already summarized)
     initial_summaries = news_list
     
@@ -95,8 +179,7 @@ def _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt
                 result = future.result()  # 每個批次的合成文章
                 new_summaries.append(result)  # 保存合成後的文章
                 
-                
-                
+    
     # Step 3: 最後對每個批次合成的結果進行進一步總結，使用 final_task_prompt
     final_summary = process_batch(new_summaries, final_task_prompt)
 
@@ -106,10 +189,23 @@ def _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt
 
 
 def summarize_news_in_batches(news_list, batch_size=5, pool_size=3):
-    initial_task_prompt = "以下是幾篇新聞的簡要摘要，總結這些新聞，並僅保留與這些主題一致的新聞"
-    final_task_prompt = "請撰寫一篇詳細且連貫的文章，總結這些新聞，專注於最重要的主題和討論。並僅保留與這些主題一致的新聞，可以說明詳細的報告"
-    return _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt, batch_size, pool_size)
+    # 初始總結的提示，強調統計和趨勢識別
+    initial_task_prompt = (
+        "以下是幾篇新聞的簡要摘要，請總結這些新聞。"
+        "同時進行數據統計，找出新聞中反覆提及的主題、趨勢、人物和事件，並指出其相關性。"
+        "請保留與這些主題和趨勢一致的新聞。"
+    )
+
+    # 最終總結的提示，要求詳細報告並強調統計數據，說明大部分新聞的共同點
+    final_task_prompt = (
+        "請撰寫一篇詳細且連貫的文章，總結這些新聞，專注於最重要的主題和討論。"
+        "請特別指出大部分新聞都提及的主題、趨勢或關鍵人物，並總結這些資訊。"
+        "可以列出新聞中最常出現的主題、人物、趨勢和關鍵事件。"
+    )
     
+    # 傳入統計分析提示
+    return _summarize_news_in_batches(news_list, initial_task_prompt, final_task_prompt, batch_size, pool_size)
+
 
 def summarize_topic_news(news_list, batch_size=2, pool_size=3):
     # 第一階段的任務提示
