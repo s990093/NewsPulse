@@ -1,7 +1,5 @@
 # NewsPulse
 
-Provide a passive listening news summary service for busy commuters or people who need quick access to news in the morning
-
 ### 1. **專案簡介**
 
 NewsPulse 是一個專為忙碌的現代人設計的新聞應用，旨在幫助用戶快速掌握每日最重要的新聞動態及值得關注的罕見議題。這個應用程序通過自動爬取各大媒體的財經新聞，並使用 AI 技術進行彙整、分析與統計，將新聞的重點與趨勢提煉出來。此外，應用還提供語音播放功能，讓用戶能夠在早晨吃早餐或通勤時，通過語音聆聽當天的新聞摘要，提升使用的便利性與體驗。
@@ -18,7 +16,9 @@ NewsPulse 專注於為忙碌的通勤者、早晨有快速新聞需求的人群�
 
 ---
 
-### 2. **檔案結構**```bash
+### 2. **檔案結構**
+
+```bash
 
 src/
 │
@@ -63,4 +63,3 @@ app/
 ---
 
 這些技術共同構成了 NewsPulse 的技術基礎，通過結合 NLP 模型與爬蟲技術，實現精確的新聞分類與摘要生成。
-```
