@@ -4,7 +4,7 @@ import time
 import openai
 import pandas as pd
 
-from src.helper import clean_string, detect_language, preprocess_content
+from NewsPulse.src.helper.helper import clean_string, detect_language, preprocess_content
 # from src.tool import analyze_sentiment_ratio, export_to_csv
 from src.ENV import TASKS
 from src.news import NewsArticle
