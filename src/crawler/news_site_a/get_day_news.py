@@ -1,16 +1,11 @@
-from typing import TypedDict, List
 from faker import Faker
 from selenium.webdriver.chrome.options import Options
-from rich.console import Console
 import time
-import threading
-from abc import ABC, abstractmethod
-from rich.progress import Progress
-from rich.table import Table
 
 from src.crawler.base_crawler import *
 
-
+# import
+from selenium import webdriver
 
 
 # FakeNewsCrawler Implementation

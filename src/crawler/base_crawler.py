@@ -34,7 +34,7 @@ class BaseCrawler(ABC):
         
         self.base_url = base_url
         self.article_limit = article_limit
-        self.news_data = []
+        self.news_data: NewsList = [] 
         self.console = Console()
 
         self.options = options
