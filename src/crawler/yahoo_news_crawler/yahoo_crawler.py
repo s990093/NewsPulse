@@ -2,6 +2,7 @@
 # ********************
 # yahoo晨間新聞網頁爬蟲
 # ********************
+# 11/11-yahoo晨間新聞網頁爬蟲完成
 #
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -146,7 +147,7 @@ class YahooNewsCrawler(BaseCrawler):
                             except Exception as e:
                                 # 嘗試其他方法
                                 time_element = browser.find_element(By.XPATH, "//*[@id='videoInfo']/div[1]/div[2]")
-                                
+
                 try:     
                     relative_time = time_element.text.split("・")[1]
                 except Exception as e:
