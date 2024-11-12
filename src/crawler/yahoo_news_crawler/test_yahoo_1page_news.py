@@ -34,11 +34,13 @@ browser = webdriver.Chrome(service=ChromeDriverPath,options=chrome_options)
 
 domain = "https://tw.yahoo.com/tv/morning-news"
 
-url = "https://tw.tv.yahoo.com/morning-news/%E6%9B%9D%E8%B2%B7%E5%88%B0-%E7%99%BC%E9%9C%89%E6%B3%A1%E9%BA%B5-%E9%99%B3%E6%80%A1%E5%90%9B-%E6%89%93%E9%96%8B%E9%A3%84%E6%83%A1%E8%87%AD-075432367.html"
+url = "https://tw.tv.yahoo.com/morning-news/%E7%A7%9F%E9%87%91%E6%BC%B2-%E5%85%92%E5%A5%B3%E4%B8%8D%E6%8E%A5%E6%A3%92-%E9%B9%BF%E6%B8%AF60%E5%B9%B4%E7%B2%89%E7%B2%BF%E5%86%B0%E5%B0%87%E5%81%9C%E6%A5%AD-075557517.html"
+
 
 today_date = time.strftime("%Y-%m-%d", time.localtime())
 print("today is:",today_date)
 #  新聞網頁
+# https://tw.news.yahoo.com/%E6%96%B0%E5%8F%B0%E5%B9%A3%E9%87%8D%E8%B2%B6174%E8%A7%92%EF%BC%813%E5%80%8B%E6%9C%88%E6%96%B0%E4%BD%8E%E5%B0%88%E5%AE%B6%E7%A4%BA%E8%AD%A6-100023959.html
 # https://tw.tv.yahoo.com/morning-news/%E7%A7%9F%E9%87%91%E6%BC%B2-%E5%85%92%E5%A5%B3%E4%B8%8D%E6%8E%A5%E6%A3%92-%E9%B9%BF%E6%B8%AF60%E5%B9%B4%E7%B2%89%E7%B2%BF%E5%86%B0%E5%B0%87%E5%81%9C%E6%A5%AD-075557517.html
 # https://tw.tv.yahoo.com/morning-news/%E6%9B%9D%E8%B2%B7%E5%88%B0-%E7%99%BC%E9%9C%89%E6%B3%A1%E9%BA%B5-%E9%99%B3%E6%80%A1%E5%90%9B-%E6%89%93%E9%96%8B%E9%A3%84%E6%83%A1%E8%87%AD-075432367.html
 # https://tw.tv.yahoo.com/morning-news/%E9%A4%A8%E9%95%B7%E4%BB%A5%E8%87%AA%E8%BA%AB%E7%82%BA%E4%BE%8B%E7%A8%B1-%E7%B5%A6%E9%8C%A2%E5%BF%83%E7%94%98%E6%83%85%E9%A1%98-%E6%8C%BA%E6%9F%AF-%E5%BE%8B%E5%B8%AB-%E6%94%B6%E9%8C%A2%E5%8F%88%E5%9C%96%E5%88%A9%E5%B0%B1%E6%A7%8B%E6%88%90%E8%B2%AA%E6%B1%99-104603221.html
@@ -81,23 +83,36 @@ try:
     except Exception as e:
         print("",end="")
 
-    title = browser.find_element(By.TAG_NAME, 'h2')
+    try:
+        title = browser.find_element(By.TAG_NAME, 'h1')
+        news_title = title.text
+        if len(news_title) < 5:
+            title = browser.find_element(By.TAG_NAME, 'h2')
+            news_title = title.text
+    except Exception as e:
+        print(url,"抓取標題失敗",e)
+        news_title = "not found"
     #video_info_div = browser.find_element(By.CLASS_NAME, 'text-sm.text-Bob.overflow-hidden')
     #paragraphs = video_info_div.find_elements(By.CSS_SELECTOR, 'p')#By.TAG_NAME, "p"
-    try:
-        paragraphs = browser.find_elements(By.TAG_NAME, "p")
+    #caas-art-15880d84-90e9-4f81-9466-073d57f4f39d > article > div > div > div > div > div > div.caas-content-wrapper > div.caas-body > p:nth-child(1)
+    try:       
+        paragraphs = browser.find_elements(By.CSS_SELECTOR, "div.caas-body > p")
         content = " ".join([p.text for p in paragraphs])  # 拼接所有非空文本段落
-        try:
-            if len(content)< 5:
-                paragraphs = browser.find_element(By.CSS_SELECTOR, "div.text-sm.text-Bob.overflow-hidden.line-clamp-8")
+        if len(content) < 5:          
+            paragraphs = browser.find_elements(By.TAG_NAME, "p")
+            content = " ".join([p.text for p in paragraphs])  # 拼接所有非空文本段落
+            try:
+                if len(content)< 5:
+                    paragraphs = browser.find_element(By.CSS_SELECTOR, "div.text-sm.text-Bob.overflow-hidden.line-clamp-8")
+                    content = paragraphs.text
+            except Exception as e:
+                paragraphs = browser.find_element(By.CSS_SELECTOR, "div.text-sm.text-Bob.overflow-hidden")
                 content = paragraphs.text
-        except Exception as e:
-            paragraphs = browser.find_element(By.CSS_SELECTOR, "div.text-sm.text-Bob.overflow-hidden")
-            content = paragraphs.text
     except Exception as e:
         print("抓取內容失敗",e)
         content = "not found"
 
+    time_type = 1
     try:
         try:
             time_element = browser.find_element(By.CSS_SELECTOR, "div.flex-wrap.text-sm.text-Bob.mt-1 > div:nth-child(2)")
@@ -108,26 +123,48 @@ try:
                 #videoInfo > div.flex.flex-wrap.text-sm.text-Bob.mt-1 > div.mb-1 
                 time.sleep(1)
                 time_element = browser.find_element(By.CSS_SELECTOR, "div.flex.flex-wrap.text-sm.text-Bob.mt-1 > div.mb-1")
-                print("1")
+                #print("1")
             except Exception as e:
                 # 嘗試其他方法
                 #videoInfo > div.flex.flex-wrap.text-sm.text-Bob.mt-1 > div:nth-child(2)            
                 try:               
                     time_element = browser.find_element(By.CSS_SELECTOR, "div.flex.flex-wrap.text-sm.text-Bob.mt-1 > div:nth-child(2)")
-                    print("2")
+                    #print("2")
                 except Exception as e:
                     try:
                         time_element = browser.find_element(By.CSS_SELECTOR, "videoInfo > div.flex.flex-wrap.text-sm.text-Bob.mt-1 > div:nth-child(2)")
-                        print("3")
+                        #print("3")
                     except Exception as e:
-                        time_element = browser.find_element(By.XPATH, "//*[@id='videoInfo']/div[1]/div[2]")
-                        print("4")
+                        
+                        # 嘗試其他方法
+                        try:
+                            time_element = browser.find_element(By.XPATH, "//*[@id='videoInfo']/div[1]/div[2]")
+                        except Exception as e:
+                            time_type = 2
+                            time_element = browser.find_element(By.CSS_SELECTOR, "time")
+                            datetime_str = time_element.get_attribute("datetime") 
     
-        relative_time = time_element.text.split("・")[1]
-        #print("相對發布時間:", relative_time)
-        # 解析「? 小時前」並轉換為具體時間
-        hours_ago = int(relative_time.split(" ")[0])  # 假設格式為 "? 小時前"
-        publish_time = datetime.now() - timedelta(hours=hours_ago)
+        if time_type == 1:                    
+            try:     
+                relative_time = time_element.text.split("・")[1]
+            except Exception as e:
+                relative_time = time_element.text
+            # 解析「?小時前 or ?分鐘前 or ? 天前」並轉換為具體時間
+            if "天前" in relative_time:
+                # 非今天新聞，所以不抓，直接抓下一則新聞
+                publish_time = datetime.now()
+            elif "小時前" in relative_time:
+                r_time = int(relative_time.split(" ")[0])
+                publish_time = datetime.now() - timedelta(hours=r_time)
+            elif "分鐘前" in relative_time:
+                r_time = int(relative_time.split(" ")[0])
+                publish_time = datetime.now() - timedelta(minutes=r_time)
+            else:
+                # 如果格式不符合，改記錄當前時間
+                publish_time = datetime.now()
+        else:
+            publish_time = datetime.fromisoformat(datetime_str[:-1])
+                
         publish_time = publish_time.strftime("%Y-%m-%d %H:%M")
     except Exception as e:
         print("抓取時間失敗",e)
