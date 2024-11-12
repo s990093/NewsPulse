@@ -46,7 +46,7 @@ class YahooNewsCrawler(BaseCrawler):
         chrome_options.add_argument("--autoplay-policy=no-user-gesture-required") # 禁用自動播放影片
         chrome_options.add_argument("--disable-popup-blocking") 
         chrome_options.add_argument("--disable-notifications") # 禁用通知
-        #chrome_options.add_argument('--headless') # 不開視窗
+        chrome_options.add_argument('--headless') # 不開視窗
         chrome_options.add_experimental_option(
             "prefs",
             {
