@@ -21,8 +21,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 from src.crawler.base_crawler import *
 
 class YahooNewsCrawler(BaseCrawler):
-    def __init__(self, base_url: str, options: Options = Options(), article_limit: int = 100):
+    def __init__(self,driverPath:str , base_url: str, options: Options = Options(), article_limit: int = 100 ):
         super().__init__(base_url, options, article_limit)
+        self.driverPath = driverPath
     
     def fetch_news(self) -> NewsList:
         news_list: NewsList = []  # Initialize a list, using NewsList only as a type hint
@@ -34,8 +35,7 @@ class YahooNewsCrawler(BaseCrawler):
         # 現在路徑是: src\crawler\yahoo_news_crawler\chromedriver.exe
         # 放到ChromeDriverPath內的路徑，" \ " 要改成 " \\ "
         # *********************************************************
-        ChromeDriverPath = "src\\crawler\\yahoo_news_crawler\\chromedriver.exe"
-
+        ChromeDriverPath = self.driverPath
         ChromeDriverPath = Service(ChromeDriverPath)#轉成 Service物件
 
         # option 設定
@@ -281,9 +281,19 @@ class YahooNewsCrawler(BaseCrawler):
         print("\n篩選後, 共",len(N_List),"篇新聞")
 
 # 使用範例
+# base_url:
 # "https://tw.yahoo.com/tv/morning-news"<-可以用
 # "https://tw.news.yahoo.com/finance/" <-應該可以用，但很慢，只測 article_limit = 10篇
-yahoo_crawler = YahooNewsCrawler("https://tw.yahoo.com/tv/morning-news", article_limit=10)
+
+yahoo_crawler = YahooNewsCrawler(
+    driverPath="C:\\Users\\Andy\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe",
+    base_url="https://tw.yahoo.com/tv/morning-news", 
+    article_limit=10
+    )
+
+# "C:\\Users\\Andy\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
+# "src\\crawler\\yahoo_news_crawler\\chromedriver.exe"
+
 #yahoo_crawler.start()
 yahoo_crawler.print_news()   
 """
