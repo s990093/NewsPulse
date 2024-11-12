@@ -3,7 +3,7 @@
 # yahoo晨間新聞網頁爬蟲
 # ********************
 # 11/11-yahoo晨間新聞網頁爬蟲完成
-# 11/12-可爬財經-yahoo新聞 https://tw.news.yahoo.com/finance/ 
+# 11/12-更新:可爬財經-yahoo新聞 https://tw.news.yahoo.com/finance/ 
 #
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
