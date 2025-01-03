@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import { FaPlay, FaStop, FaVolumeUp, FaPlayCircle } from "react-icons/fa";
-import { articles } from "./articles";
 import { motion } from "framer-motion";
 import { Bar } from "react-chartjs-2";
+import { articles } from "./articles";
 
 import {
   Chart as ChartJS,
@@ -52,7 +52,7 @@ export default function NewsCards() {
   const speakAll = () => {
     stopSpeaking();
     const combinedContent = articles
-      .map((article) => article.content)
+      .map((article) => article.content.map((c) => c.text).join(" "))
       .join(" ");
     speak(combinedContent, "all");
   };
@@ -135,7 +135,9 @@ export default function NewsCards() {
             >
               <h2 className="text-xl font-semibold mb-4 text-blue-400 flex items-center">
                 <button
-                  onClick={() => speak(article.content, index)}
+                  onClick={() =>
+                    speak(article.content.map((c) => c.text).join(" "), index)
+                  }
                   className={`${
                     playing === index ? "animate-pulse" : ""
                   } text-white px-4 py-2 rounded hover:bg-green-600 shadow-md transition-all flex items-center`}
@@ -148,10 +150,28 @@ export default function NewsCards() {
                 </button>
                 {article.title}
               </h2>
-              <p className="text-gray-300 mb-4">{article.content}</p>
+              <div className="text-gray-300 mb-4">
+                {article.content.map((section, i) => (
+                  <p key={i} className="mb-2">
+                    {section.type === "link" ? (
+                      <a
+                        href={section.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline"
+                      >
+                        {section.linkText}
+                      </a>
+                    ) : (
+                      section.text
+                    )}
+                  </p>
+                ))}
+              </div>
             </motion.div>
           ))}
         </div>
+
         <div className="p-4">
           <div className="text-center text-lg mb-4">
             共收集 <span className="font-bold text-blue-400">{totalNews}</span>{" "}
