@@ -39,5 +39,3 @@ class FakeNewsCrawler(BaseCrawler):
 #     FakeNewsCrawler.start()
     
     
-
-  

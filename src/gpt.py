@@ -90,9 +90,6 @@ def extract_country_code(news_id, summary_report, news_content, max_retries=4):
     return None  # 返回 None 表示提取失敗
 
 
-
-
-
 def analyze_with_gpt(content, task_prompt, model="gpt-3.5-turbo-0125", temperature=0, max_tokens=200, top_p=1, frequency_penalty=0.0, presence_penalty=0.0):
     """
     This function uses the OpenAI GPT model to generate a response based on the given content and task prompt.
@@ -365,6 +362,8 @@ def generate_content_to_markdown(content: str, max_tokens: int = 200) -> str:
     Returns:
     - str: The converted markdown content.
     """
+    
+    
     # 設定 Markdown 提示
     markdown_prompt = (
         f"請將以下文章內容轉換為美觀的Markdown格式，"

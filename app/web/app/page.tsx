@@ -1,43 +1,166 @@
 "use client";
-import { MdPreview } from "md-editor-rt";
-import "md-editor-rt/lib/preview.css";
 import { useState } from "react";
+import { FaPlay, FaStop, FaVolumeUp, FaPlayCircle } from "react-icons/fa";
+import { articles } from "./articles";
+import { motion } from "framer-motion";
+import { Bar } from "react-chartjs-2";
 
-const markdownContent = `
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-# 台灣市場面臨的多重挑戰及應對策略
+export default function NewsCards() {
+  const [playing, setPlaying] = useState(null);
 
-## **股市波動與社會議題**
-根據提供的新聞內容，可以看出台灣市場受到了多重因素的影響，從股市波動到家暴問題都反映出社會的多元議題。首先，台灣股市的高低震盪以及極端的漲跌幅度顯示市場的不穩定性，可能受到國際經濟和政治環境的波動影響。這對台灣的投資者和經濟體系都具有重要的影響，需要謹慎應對。
+  // 假數據：各類新聞的數量
+  const categories = ["政治", "經濟", "科技", "娛樂", "體育"];
+  const fakeData = [12, 8, 15, 5, 10]; // 假設這是每個分類的新聞數量
+  const totalNews = 409;
 
-## **家庭暴力議題的關注**
-另一方面，近期一起關於家庭暴力的案件受到廣泛關注，法院支持受害者的離婚申請，這提醒著社會家庭暴力問題的嚴重性。這也引起社會更多對家庭暴力議題的關注，呼籲更多的支持和資源投入到預防和處理家庭暴力的工作上。這不僅是一個家庭的問題，更關乎整個社會的安全和和諧。
+  const speak = (text, index) => {
+    if (playing !== null) {
+      speechSynthesis.cancel();
+      setPlaying(null);
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-TW";
+    utterance.onend = () => setPlaying(null);
+    speechSynthesis.speak(utterance);
+    setPlaying(index);
+  };
 
-## **製造業挑戰和全球經濟影響**
-此外，製造業景氣指數下滑和外銷新訂單縮減，顯示出台灣的製造業面臨著挑戰。全球經濟下滑和貿易壓力對製造業造成了影響，這對台灣的經濟增長和出口產業都帶來了影響。加上歐洲央行和美國聯準會等央行的降息政策，全球市場的不確定性進一步加劇，對台灣的金融市場和投資環境也帶來了波動。
+  const stopSpeaking = () => {
+    speechSynthesis.cancel();
+    setPlaying(null);
+  };
 
-## **人工智能與科技創新**
-同時，人工智能市場持續快速發展，可能對台灣企業和經濟運作方式帶來前所未有的變革和挑戰。台灣應當加強對新興科技的研究和應用，以提高產業競爭力。中國央行的降準降息舉措也可能對全球市場造成影響，特別對銅價和房地產市場有潛在的影響。
+  const speakAll = () => {
+    stopSpeaking();
+    const combinedContent = articles
+      .map((article) => article.content)
+      .join(" ");
+    speak(combinedContent, "all");
+  };
 
-## **結語**
-綜上所述，台灣面臨著來自國際和國內多方面的挑戰，從金融市場的波動到社會議題的嚴峻情況。台灣應該保持警醒，加強應對這些挑戰，同時積極面對變革和創新，以促進經濟的穩健增長與社會的進步。
+  const chartData = {
+    labels: categories,
+    datasets: [
+      {
+        label: "新聞數量",
+        data: fakeData,
+        backgroundColor: [
+          "rgba(75, 192, 192, 0.2)",
+          "rgba(255, 99, 132, 0.2)",
+          "rgba(54, 162, 235, 0.2)",
+          "rgba(255, 206, 86, 0.2)",
+          "rgba(153, 102, 255, 0.2)",
+        ],
+        borderColor: [
+          "rgba(75, 192, 192, 1)",
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(153, 102, 255, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
 
-`;
-export default function MarkdownPage() {
-  const [id] = useState("preview-only");
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "新聞分類統計",
+      },
+    },
+  };
 
   return (
-    <div className="container mx-auto p-5">
-      <h1 className="text-4xl font-extrabold mb-6 text-center ">
-        每日新聞摘要
-      </h1>
-      <div className="shadow-lg rounded-lg p-8 bg-white">
-        <MdPreview
-          editorId={id}
-          modelValue={markdownContent}
-          language="en-US"
-        />
+    <div className="flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen p-2">
+      <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen p-5 animate-fade-in">
+        <h1 className="text-4xl font-extrabold mb-6 text-center text-gradient ">
+          每日新聞摘要
+        </h1>
+
+        <div className="flex justify-center space-x-4 mb-6">
+          <button
+            onClick={playing === null ? speakAll : stopSpeaking}
+            className={`${
+              playing === null
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-red-600 hover:bg-red-700"
+            } text-white px-4 py-2 rounded flex items-center shadow-lg transition-transform transform hover:scale-110`}
+          >
+            {playing === null ? (
+              <FaPlay className="mr-2" />
+            ) : (
+              <FaStop className="mr-2" />
+            )}
+            {playing === null ? "播放全部內容" : "停止播放"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {articles.map((article, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.2,
+                ease: "easeOut",
+              }}
+              className="shadow-lg rounded-lg p-6 bg-gray-800 flex flex-col justify-between hover:shadow-2xl transition-all transform hover:scale-105 hover:bg-gray-700"
+            >
+              <h2 className="text-xl font-semibold mb-4 text-blue-400 flex items-center">
+                <button
+                  onClick={() => speak(article.content, index)}
+                  className={`${
+                    playing === index ? "animate-pulse" : ""
+                  } text-white px-4 py-2 rounded hover:bg-green-600 shadow-md transition-all flex items-center`}
+                >
+                  {playing === index ? (
+                    <FaVolumeUp className="mr-2" />
+                  ) : (
+                    <FaPlayCircle className="mr-2" />
+                  )}
+                </button>
+                {article.title}
+              </h2>
+              <p className="text-gray-300 mb-4">{article.content}</p>
+            </motion.div>
+          ))}
+        </div>
+        <div className="p-4">
+          <div className="text-center text-lg mb-4">
+            共收集 <span className="font-bold text-blue-400">{totalNews}</span>{" "}
+            篇新聞
+          </div>
+          <div className="mb-6">
+            <Bar data={chartData} options={chartOptions} />
+          </div>
+        </div>
       </div>
     </div>
   );

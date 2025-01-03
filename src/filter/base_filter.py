@@ -10,6 +10,7 @@ from rich.console import Console
 from src.helper.news_types import NewsList
 class NewsAnalysisBase(ABC):
     """
+    
     抽象基類，定義新聞分析的基本結構和流程
     """
 
